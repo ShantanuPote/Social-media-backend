@@ -1,31 +1,16 @@
-const expres = require("express")
+const express = require("express")
 const router = express.Router()
-const jwt = require("jsonwebtoken")
-const userModel = require("../models/user.model")
+const authMiddleware = require("../middlewares/auth.middleware")
+const multer = require("multer")
+const { createPostController } = require("../controllers/post.controller")
 
-router('/post', async (req, res) =>{
-    const token = req.cookies.token
+const upload = multer({storage: multer.memoryStorage()})
 
-    if(!token){
-        return res.status(401).json({
-            message:"Unauthorized access, please login first"
-        })
-    }
+router.post('/',
+    authMiddleware,
+    upload.single("image"),
+    createPostController)
 
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_TOKEN)
 
-        const user = await userModel.findOne({
-            _id: decoded.id
-        })
 
-        req.user = user
-
-    }catch(err){
-        res.status(401).json({
-            message: "Invalid token , please login again"
-        })
-    }
-
-})
-
+module.exports = router
